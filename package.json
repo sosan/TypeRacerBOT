@@ -1,0 +1,30 @@
+{
+  "name": "typeracerbot",
+  "version": "0.0.1",
+  "description": "Type Racer bot for discord",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EsteveSegura/TypeRacerBOT.git"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "type",
+    "racer"
+  ],
+  "author": "GiR",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/EsteveSegura/TypeRacerBOT/issues"
+  },
+  "homepage": "https://github.com/EsteveSegura/TypeRacerBOT#readme",
+  "dependencies": {
+    "discord.js": "^12.2.0",
+    "dotenv": "^8.2.0",
+    "mongoose": "^5.9.21"
+  }
+}

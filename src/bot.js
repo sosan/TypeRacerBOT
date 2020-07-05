@@ -2,12 +2,14 @@ require('dotenv').config();
 const Discord = require('discord.js');
 const mongoose = require('mongoose');
 const client = new Discord.Client();
+const dataBaseWord = require('./libs/dataBaseWord');
 const stringsUtils = require('./utils/strings');
-const asyncUtils = require('./utils/async');
 const typeRacer = require('./libs/typeracer');
+const asyncUtils = require('./utils/async');
+const helper = require('./libs/helpers');
 
 mongoose.connect('mongodb://localhost/typerace', { useNewUrlParser: true, useUnifiedTopology: true }).then(() => {
-    console.log("DataBase: OK")
+  console.log("DataBase: OK")
 })
 
 client.on('ready', function () {
@@ -18,6 +20,9 @@ const semafro = ['🟢', '🟡', '🔴']
 let newRace = new typeRacer()
 
 client.on('message', async (msg) => {
+
+  let msgSplit = msg.content.split(" ")
+
   if (msg.content.toLocaleLowerCase() == "!typerace") {
     if (!newRace.gameStatus) {
       channelOnRace = msg.channel.id
@@ -50,6 +55,24 @@ client.on('message', async (msg) => {
       msg.react('👎')
       newRace.addLoser({ 'userId': msg.author.id, timeToWin: timeOnRespond.toString() })
     }
+  }
+
+
+  if (msg.content.toLowerCase().startsWith("!addword")) {
+    let langFromMessage = msgSplit[1] //Language
+
+    let foundLang = helper.languages.filter((lang) => {
+      if (lang == langFromMessage) { return lang }
+    })
+
+    if (foundLang.length > 0) {
+      let wordToAdd = msg.content.toLowerCase().replace(`!addword ${langFromMessage.toLowerCase()} `, "")
+      let addToDb = await dataBaseWord.addNewWord({ 'lang': msgSplit[1], 'word': wordToAdd })
+      console.log(addToDb)
+    }
+
+
+    //dataBaseWord
   }
 });
 

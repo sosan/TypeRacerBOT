@@ -7,5 +7,14 @@ async function addNewWord(data) {
     return saved
 }
 
+async function getAllWords(data) {
+    let getAllWords = await word.find(data)
+    let onlyWords = getAllWords.map((dataBaseObj) => {
+        return dataBaseObj.word
+    })
+    
+    return onlyWords
+}
 
-module.exports = { addNewWord }
+
+module.exports = { addNewWord, getAllWords }

@@ -20,14 +20,18 @@ const semafro = ['🟢', '🟡', '🔴']
 let newRace = new typeRacer()
 
 client.on('message', async (msg) => {
-
   let msgSplit = msg.content.split(" ")
+  let langFromMessage = msgSplit[1] //Language
 
-  if (msg.content.toLocaleLowerCase() == "!typerace") {
+  let foundLang = helper.languages.filter((lang) => {
+    if (lang == langFromMessage) { return lang }
+  })
+
+
+  if (msg.content.toLowerCase().startsWith("!typerace")) {
     if (!newRace.gameStatus) {
-      channelOnRace = msg.channel.id
       let msgRacer = await msg.channel.send(`Preparados! Sustituye las "_" por espacios " "`)
-      newRace.initGame()
+      newRace.initGame(foundLang.length > 0 ? foundLang[0] : "ENG")
       await asyncUtils.sleep(5)
       for (let i = 3; i >= 1; i--) {
         msgRacer.edit(` ${semafro[i - 1]} ${semafro[i - 1]} ${semafro[i - 1]}   ${i}   ${semafro[i - 1]} ${semafro[i - 1]} ${semafro[i - 1]}`)
@@ -37,7 +41,6 @@ client.on('message', async (msg) => {
       msgRacer.edit(newRace.getQuote().ofuscated)
       newRace.setStartDate()
       newRace.showLadder(msg)
-      console.log(newRace.getQuote().raw)
     }
   }
 
@@ -59,12 +62,6 @@ client.on('message', async (msg) => {
 
 
   if (msg.content.toLowerCase().startsWith("!addword")) {
-    let langFromMessage = msgSplit[1] //Language
-
-    let foundLang = helper.languages.filter((lang) => {
-      if (lang == langFromMessage) { return lang }
-    })
-
     if (foundLang.length > 0) {
       let wordToAdd = msg.content.toLowerCase().replace(`!addword ${langFromMessage.toLowerCase()} `, "")
       let addToDb = await dataBaseWord.addNewWord({ 'lang': msgSplit[1], 'word': wordToAdd })

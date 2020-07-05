@@ -1,7 +1,8 @@
 const dataBaseWord = require('../libs/dataBaseWord');
 
 class TypeRacer {
-    constructor() {
+    constructor(idChannel) {
+        this.idChannel = idChannel;
         this.winners = [];
         this.losers = [];
         this.gameStatus = false;
@@ -10,6 +11,7 @@ class TypeRacer {
         this.randIndex = 0;
         this.isShuffleCapital = false;
         this.shuffleCapital = "";
+        this.finished = false;
     }
 
     getGameStatus() {
@@ -20,13 +22,17 @@ class TypeRacer {
         this.startDate = Date.now();
     }
 
+    setFinished(){
+        this.finished = true;
+    }
+
     addWinner(user) {
         this.winners.push(user)
     }
     addLoser(user) {
         this.losers.push(user)
     }
-    
+
     async initGame(lang) {
         this.gameStatus = true;
         this.quote = await dataBaseWord.getAllWords({ lang: lang })
@@ -67,12 +73,12 @@ class TypeRacer {
     }
 
     getQuote() {
-        let strRaw = this.quote[this.randIndex]
-        let splitToOfuscated = strRaw.split(" ").join("_")
+        let strRaw = this.quote[this.randIndex];
+        let splitToOfuscated = strRaw.split(" ").join("_");
         //FUN MODE START
         if (this.isShuffleCapital) {
-            strRaw = this.shuffleCapital
-            splitToOfuscated = this.shuffleCapital.split(" ").join("_")
+            strRaw = this.shuffleCapital;
+            splitToOfuscated = this.shuffleCapital.split(" ").join("_");
         }
         //FUN MODE END
         return {
@@ -85,19 +91,21 @@ class TypeRacer {
         setTimeout(() => {
             let frase = "";
             this.gameStatus = false;
-            this.winners.forEach((winner) => {
-                frase = `${frase}${i == 0 ? "**--Ganadores--**\n" : ""}${i + 1}- <@${winner.userId}> con el tiempo de: **${winner.timeToWin}ms**\n`
+
+            this.winners.forEach((winner, i) => {
+                frase = `${frase}${i == 0 ? "**--Ganadores--**\n" : ""}${i + 1}- <@${winner.userId}> con el tiempo de: **${winner.timeToWin}ms**\n`;
             });
-            this.losers.forEach((loser) => {
-                frase = `${frase}${i == 0 ? "**--Perdedores--**\n" : ""}${i + 1}- <@${loser.userId}> con el tiempo de: **${loser.timeToWin}ms**\n`
+
+            this.losers.forEach((loser, i) => {
+                frase = `${frase}${i == 0 ? "**--Perdedores--**\n" : ""}${i + 1}- <@${loser.userId}> con el tiempo de: **${loser.timeToWin}ms**\n`;
             });
 
             msg.channel.send(frase == "" ? "💔 💔 💔 Nadie lo consiguio 💔 💔 💔" : frase);
 
             this.winners = [];
             this.losers = [];
-        }, 15000);
+        }, 60000);
     }
 }
 
-module.exports = TypeRacer
+module.exports = TypeRacer;

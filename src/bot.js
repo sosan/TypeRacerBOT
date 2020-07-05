@@ -3,10 +3,11 @@ const Discord = require('discord.js');
 const mongoose = require('mongoose');
 const client = new Discord.Client();
 const dataBaseWord = require('./libs/dataBaseWord');
-const stringsUtils = require('./utils/strings');
 const typeRacer = require('./libs/typeracer');
-const asyncUtils = require('./utils/async');
 const helper = require('./libs/helpers');
+const raceCommands = require('./commands/raceCommands');
+
+let races = []
 
 mongoose.connect('mongodb://localhost/typerace', { useNewUrlParser: true, useUnifiedTopology: true }).then(() => {
   console.log("DataBase: OK")
@@ -16,64 +17,55 @@ client.on('ready', function () {
   console.log("TypeRacer: OK ");
 });
 
-const semafro = ['🟢', '🟡', '🔴']
-let newRace = new typeRacer()
+//let newRace = new typeRacer()
 
 client.on('message', async (msg) => {
+  //utils to handle message
+  let findActiveRace = findRace(races, msg.channel.id)
   let msgSplit = msg.content.split(" ")
-  let langFromMessage = msgSplit[1] //Language
+  let langFromMessage = msgSplit[1]
 
   let foundLang = helper.languages.filter((lang) => {
     if (lang == langFromMessage) { return lang }
   })
 
-
+  //commands
   if (msg.content.toLowerCase().startsWith("!typerace")) {
-    if (!newRace.gameStatus) {
-      let msgRacer = await msg.channel.send(`Preparados! Sustituye las "_" por espacios " "`)
-      newRace.initGame(foundLang.length > 0 ? foundLang[0] : "ENG")
-      await asyncUtils.sleep(5)
-      for (let i = 3; i >= 1; i--) {
-        msgRacer.edit(` ${semafro[i - 1]} ${semafro[i - 1]} ${semafro[i - 1]}   ${i}   ${semafro[i - 1]} ${semafro[i - 1]} ${semafro[i - 1]}`)
-        await asyncUtils.sleep(1)
-      }
-
-      msgRacer.edit(newRace.getQuote().ofuscated)
-      newRace.setStartDate()
-      newRace.showLadder(msg)
+    if(findActiveRace == null){
+      races.push(new typeRacer(msg.channel.id))
+      let findActiveRace_ = findRace(races, msg.channel.id)
+      console.log(findActiveRace_)
+      await raceCommands.typeRaceCommand(findActiveRace_, msg, foundLang)
     }
   }
 
-
-  if (newRace.gameStatus && !newRace.ifSomeUserAlreadyAnswered(msg.author.id)) {
-    let timeOnRespond = Math.abs(Date.now() - newRace.startDate)
-    let getDistance = stringsUtils.editDistance(newRace.getQuote().raw, msg.content)
-
-    if (newRace.getQuote().raw == msg.content) {
-      msg.react('👍')
-      newRace.addWinner({ 'userId': msg.author.id, timeToWin: timeOnRespond.toString() })
+  if (findActiveRace) {
+    if (findActiveRace.gameStatus && !findActiveRace.ifSomeUserAlreadyAnswered(msg.author.id)) {
+      raceCommands.userAnswer(findActiveRace, msg)
     }
 
-    if (getDistance <= 3 && getDistance != 0) {
-      msg.react('👎')
-      newRace.addLoser({ 'userId': msg.author.id, timeToWin: timeOnRespond.toString() })
+    if (msg.content.toLowerCase().startsWith("!addword")) {
+      await raceCommands.addWord(msg, foundLang, langFromMessage)
     }
-  }
-
-
-  if (msg.content.toLowerCase().startsWith("!addword")) {
-    if (foundLang.length > 0) {
-      let wordToAdd = msg.content.toLowerCase().replace(`!addword ${langFromMessage.toLowerCase()} `, "")
-      let addToDb = await dataBaseWord.addNewWord({ 'lang': msgSplit[1], 'word': wordToAdd })
-      console.log(addToDb)
-    }
-
-
-    //dataBaseWord
   }
 });
 
 
 client.login(process.env.DISCORD_TOKEN);
 
+function findRace(listRaces, idChannelDiscord) {
+  let actualRace = null;
+  listRaces.forEach((race) => {
+    if (race.idChannel == idChannelDiscord)
+      actualRace = race
+  });
+  return actualRace
+}
 
+function removeRaces(list) {
+  for (let i = list.length - 1; i--;) {
+    if (list[i] === 'foo') {
+      list.splice(i, 1);
+    }
+  }
+}

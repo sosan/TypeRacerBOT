@@ -22,7 +22,7 @@ class TypeRacer {
         this.startDate = Date.now();
     }
 
-    setFinished(){
+    setFinished() {
         this.finished = true;
     }
 
@@ -104,7 +104,8 @@ class TypeRacer {
 
             this.winners = [];
             this.losers = [];
-        }, 60000);
+            this.setFinished();
+        }, 15000);
     }
 }
 

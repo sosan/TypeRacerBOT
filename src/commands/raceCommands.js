@@ -1,7 +1,6 @@
 const asyncUtils = require('../utils/async');
 const stringsUtils = require('../utils/strings')
 const dataBaseWord = require('../libs/dataBaseWord')
-
 const semafro = ['🟢', '🟡', '🔴']
 
 async function typeRaceCommand(newRace, msg, foundLang) {
@@ -22,13 +21,12 @@ async function typeRaceCommand(newRace, msg, foundLang) {
     }
 }
 
-
 function userAnswer(newRace, msg) {
     let timeOnRespond = Math.abs(Date.now() - newRace.startDate)
     let getDistance = stringsUtils.editDistance(newRace.getQuote().raw, msg.content)
 
     if (newRace.getQuote().raw == msg.content) {
-        msg.react('👍')
+        msg.react( '👍')
         newRace.addWinner({ 'userId': msg.author.id, timeToWin: timeOnRespond.toString() })
     }
 
@@ -38,11 +36,11 @@ function userAnswer(newRace, msg) {
     }
 }
 
-async function addWord(msg, foundLang, langFromMessage) {
+async function addWord(msg, foundLang) {
     if (msg.member.hasPermission("ADMINISTRATOR")) {
         if (foundLang.length > 0) {
-            let wordToAdd = msg.content.toLowerCase().replace(`!addword ${langFromMessage.toLowerCase()} `, "")
-            let addToDb = await dataBaseWord.addNewWord({ 'lang': langFromMessage, 'word': wordToAdd })
+            let wordToAdd = msg.content.toLowerCase().replace(`!addword ${foundLang[0].toLowerCase()} `, "")
+            let addToDb = await dataBaseWord.addNewWord({ 'lang': foundLang[0], 'word': wordToAdd })
             msg.reply("Añadido a la base de datos!")
         } else {
             msg.react('😵')

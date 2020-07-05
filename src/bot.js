@@ -1,13 +1,11 @@
 require('dotenv').config();
 const Discord = require('discord.js');
-const mongoose = require('mongoose');
 const client = new Discord.Client();
-const dataBaseWord = require('./libs/dataBaseWord');
+const mongoose = require('mongoose');
 const typeRacer = require('./libs/typeracer');
 const helper = require('./libs/helpers');
 const raceCommands = require('./commands/raceCommands');
-
-let races = []
+const listRace = require('./libs/listRace');
 
 mongoose.connect('mongodb://localhost/typerace', { useNewUrlParser: true, useUnifiedTopology: true }).then(() => {
   console.log("DataBase: OK")
@@ -20,23 +18,25 @@ client.on('ready', function () {
 //let newRace = new typeRacer()
 
 client.on('message', async (msg) => {
+
+  console.log(msg.guild.emojis)
   //utils to handle message
-  let findActiveRace = findRace(races, msg.channel.id)
-  let msgSplit = msg.content.split(" ")
-  let langFromMessage = msgSplit[1]
+  let findActiveRace = listRace.findRace(listRace.races, msg.channel.id);
+  let msgSplit = msg.content.split(" ");
 
   let foundLang = helper.languages.filter((lang) => {
-    if (lang == langFromMessage) { return lang }
+    if (lang == msgSplit[1]) { return lang }
   })
 
   //commands
   if (msg.content.toLowerCase().startsWith("!typerace")) {
-    if(findActiveRace == null){
-      races.push(new typeRacer(msg.channel.id))
-      let findActiveRace_ = findRace(races, msg.channel.id)
-      console.log(findActiveRace_)
+    listRace.races = listRace.removeFinishedRaces(races)
+    if (findActiveRace == null || findActiveRace.finished) {
+      listRace.races.push(new typeRacer(msg.channel.id))
+      let findActiveRace_ = listRace.findRace(listRace.races, msg.channel.id)
       await raceCommands.typeRaceCommand(findActiveRace_, msg, foundLang)
     }
+
   }
 
   if (findActiveRace) {
@@ -45,27 +45,10 @@ client.on('message', async (msg) => {
     }
 
     if (msg.content.toLowerCase().startsWith("!addword")) {
-      await raceCommands.addWord(msg, foundLang, langFromMessage)
+      await raceCommands.addWord(msg, foundLang)
     }
   }
 });
 
 
 client.login(process.env.DISCORD_TOKEN);
-
-function findRace(listRaces, idChannelDiscord) {
-  let actualRace = null;
-  listRaces.forEach((race) => {
-    if (race.idChannel == idChannelDiscord)
-      actualRace = race
-  });
-  return actualRace
-}
-
-function removeRaces(list) {
-  for (let i = list.length - 1; i--;) {
-    if (list[i] === 'foo') {
-      list.splice(i, 1);
-    }
-  }
-}

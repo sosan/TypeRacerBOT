@@ -25,5 +25,16 @@ function editDistance(a, b) {
 
     return matrix[b.length][a.length];
 }
+//Implement
+function distance(s, t) {
+    if (!s.length) return t.length;
+    if (!t.length) return s.length
+
+    return Math.min(
+        distance(s.substr(1), t) + 1, //Inse
+        distance(t.substr(1), s) + 1, //repla
+        distance(s.substr(1), t.substr(1)) + (s[0] !== t[0] ? 1 : 0),//Delete
+    )
+}
 
 module.exports = { editDistance }

@@ -25,19 +25,22 @@ function userAnswer(newRace, msg) {
     let timeOnRespond = Math.abs(Date.now() - newRace.startDate)
     let getDistance = stringsUtils.editDistance(newRace.getQuote().raw, msg.content)
 
+
+    //ToDo: Join in one function
     if (newRace.getQuote().raw == msg.content) {
         msg.react( '👍')
         newRace.addWinner({ 'userId': msg.author.id, timeToWin: timeOnRespond.toString() })
     }
 
-    if (getDistance <= 3 && getDistance != 0) {
+    //ToDo: MOVE this to config file.
+    if (getDistance <= 5 && getDistance != 0) {
         msg.react('👎')
         newRace.addLoser({ 'userId': msg.author.id, timeToWin: timeOnRespond.toString() })
     }
 }
 
 async function addWord(msg, foundLang) {
-    if (msg.member.hasPermission("ADMINISTRATOR")) {
+    if (!msg.member.hasPermission("ADMINISTRATOR")) {
         if (foundLang.length > 0) {
             let wordToAdd = msg.content.toLowerCase().replace(`!addword ${foundLang[0].toLowerCase()} `, "")
             let addToDb = await dataBaseWord.addNewWord({ 'lang': foundLang[0], 'word': wordToAdd })

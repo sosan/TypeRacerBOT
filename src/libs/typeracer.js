@@ -1,4 +1,6 @@
 const dataBaseWord = require('../libs/dataBaseWord');
+const dataBaseRace = require('../libs/dataBaseRace');
+const dataBaseRacer = require('../libs/dataBaseRacer');
 
 class TypeRacer {
     constructor(idChannel) {
@@ -12,6 +14,7 @@ class TypeRacer {
         this.isShuffleCapital = false;
         this.shuffleCapital = "";
         this.finished = false;
+        this.dataStructuredToDb = [];
     }
 
     getGameStatus() {
@@ -68,7 +71,6 @@ class TypeRacer {
                 isUserRepeated = true;
             }
         });
-
         return isUserRepeated;
     }
 
@@ -87,21 +89,40 @@ class TypeRacer {
         }
     }
 
+    saveToDataBase(objRace) {
+        dataBaseRace.addNewRace({
+            phrase: this.quote[this.randIndex],
+            racers: objRace
+        });
+    }
+
     showLadder(msg) {
         setTimeout(() => {
             let frase = "";
             this.gameStatus = false;
+            let participantsRace = this.winners.length + this.losers.length
 
-            this.winners.forEach((winner, i) => {
+            this.winners.forEach(async(winner, i) => {
                 frase = `${frase}${i == 0 ? "**--Ganadores--**\n" : ""}${i + 1}- <@${winner.userId}> con el tiempo de: **${winner.timeToWin}ms**\n`;
+                if (participantsRace > 1) {
+                    let actualUserScoreDb = await dataBaseRacer.getAllScores(msg.author.id)
+                    let ratioDb = await dataBaseRace.getWinsAndLosses(msg.author.id)
+                    dataBaseRacer.updateScore(winner.userId, this.quote[this.randIndex].split('').length, winner.timeToWin,ratioDb, actualUserScoreDb)
+                }
+                this.dataStructuredToDb.push({ id: winner.userId, position: parseInt(i + 1), ms: parseInt(winner.timeToWin), isWinner: true })
             });
 
             this.losers.forEach((loser, i) => {
                 frase = `${frase}${i == 0 ? "**--Perdedores--**\n" : ""}${i + 1}- <@${loser.userId}> con el tiempo de: **${loser.timeToWin}ms**\n`;
+                this.dataStructuredToDb.push({ id: loser.userId, position: parseInt(i + 1), ms: parseInt(loser.timeToWin), isWinner: false })
             });
 
             msg.channel.send(frase == "" ? "💔 💔 💔 Nadie lo consiguio 💔 💔 💔" : frase);
+            if (participantsRace < 1) {
+                msg.channel.send(`Recuerda que solo puntua si compiten 2 o mas personas`)
+            }
 
+            this.saveToDataBase(this.dataStructuredToDb);
             this.winners = [];
             this.losers = [];
             this.setFinished();
